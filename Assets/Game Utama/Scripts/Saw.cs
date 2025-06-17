@@ -10,11 +10,17 @@ public class Saw : MonoBehaviour
     public float rotationSpeed = 200f;
 
     [Header("Pengaturan Gerak Bolak-Balik")]
-    public Vector2 pointA;
-    public Vector2 pointB;
+    [SerializeField] private Vector2 pointB; // Hanya pointB yang perlu diatur di Inspector
     public float moveSpeed = 3f;
 
+    private Vector2 pointA; // pointA akan diatur otomatis
     private Vector2 targetPos;
+
+    void Awake()
+    {
+        // Set pointA ke posisi awal objek
+        pointA = transform.position;
+    }
 
     void Start()
     {
@@ -47,8 +53,12 @@ public class Saw : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(pointA, 0.1f);
+        
+        // Untuk preview di Editor, gunakan current position jika pointA belum diset
+        Vector2 previewPointA = Application.isPlaying ? pointA : (Vector2)transform.position;
+        
+        Gizmos.DrawSphere(previewPointA, 0.1f);
         Gizmos.DrawSphere(pointB, 0.1f);
-        Gizmos.DrawLine(pointA, pointB);
+        Gizmos.DrawLine(previewPointA, pointB);
     }
 }

@@ -4,10 +4,14 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Player Settings")]
+    public int playerNumber = 1; // 1 untuk Player 1, 2 untuk Player 2
+
     [Header("Input Settings")]
     public KeyCode moveLeft = KeyCode.A;
     public KeyCode moveRight = KeyCode.D;
     public KeyCode jump = KeyCode.W;
+    public KeyCode down = KeyCode.S;
     public KeyCode interact = KeyCode.E;
 
     [Header("Movement Settings")]
@@ -26,7 +30,9 @@ public class PlayerController : MonoBehaviour
     private bool grounded = false;
     private Animator animator;
 
-    private bool isDead = false; // status kematian
+    private bool isDead = false; 
+
+
 
     void Start()
     {
@@ -38,6 +44,16 @@ public class PlayerController : MonoBehaviour
             rb.freezeRotation = true;
 
         originalScale = transform.localScale;
+
+        // Atur input berdasarkan playerNumber
+        if (playerNumber == 2)
+        {
+            moveLeft = KeyCode.LeftArrow;
+            moveRight = KeyCode.RightArrow;
+            jump = KeyCode.UpArrow;
+            down = KeyCode.DownArrow;
+            interact = KeyCode.RightShift;
+        }
     }
 
     void Update()
@@ -49,18 +65,19 @@ public class PlayerController : MonoBehaviour
         UpdateAnimationState();
     }
 
-    void HandleMovement()
-    {
-        float moveDir = 0f;
-        if (Input.GetKey(moveLeft)) moveDir = -1f;
-        else if (Input.GetKey(moveRight)) moveDir = 1f;
+void HandleMovement()
+{
+    float moveDir = 0f;
+    if (Input.GetKey(moveLeft)) moveDir = -1f;
+    else if (Input.GetKey(moveRight)) moveDir = 1f;
 
-        rb.linearVelocity = new Vector2(moveDir * speed, rb.linearVelocity.y);
-        run = moveDir != 0;
+    rb.linearVelocity = new Vector2(moveDir * speed, rb.linearVelocity.y);
+    run = moveDir != 0;
 
-        if (moveDir > 0 && !facingRight) Flip();
-        else if (moveDir < 0 && facingRight) Flip();
-    }
+    if (moveDir > 0 && !facingRight) Flip();
+    else if (moveDir < 0 && facingRight) Flip();
+
+}
 
     void HandleJump()
     {
@@ -71,6 +88,7 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             if (animator != null)
                 animator.SetTrigger("jump");
+                SoundManager.Instance.Play3D("Jump", transform.position);
         }
     }
 
@@ -103,31 +121,50 @@ public class PlayerController : MonoBehaviour
     {
         if (other.CompareTag("Saw"))
         {
-            Debug.Log("mati");
-            
+            Debug.Log("mati terpotong");
+            StartCoroutine(DieAfterDelay());
         }
-    }
-
-    IEnumerator DieAfterDelay()
-    {
-        isDead = true;
-
-        // Tambahkan animasi mati jika ada
-        if (animator != null)
+        else if (other.CompareTag("Duri"))
         {
-            animator.SetTrigger("die");
+            Debug.Log("mati di duri");
+            StartCoroutine(DieAfterDelay());
         }
-
-        // Matikan gerakan
-        rb.linearVelocity = Vector2.zero;
-        rb.isKinematic = true;
-        GetComponent<Collider2D>().enabled = false;
-
-        // Delay sebelum reload
-        yield return new WaitForSeconds(1.5f);
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        else if (other.CompareTag("Laser"))
+        {
+            Debug.Log("mati di laser");
+            StartCoroutine(DieAfterDelay());
+        }
+        else if (other.CompareTag("Lava"))
+        {
+            Debug.Log("mati di lava");
+            StartCoroutine(DieAfterDelay());
+        }
     }
+
+IEnumerator DieAfterDelay()
+{
+    isDead = true;
+    // Matikan gerakan sementara
+    rb.linearVelocity = Vector2.zero;
+    rb.bodyType = RigidbodyType2D.Kinematic;
+
+    // Efek blinking
+    SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+    for (int i = 0; i < 6; i++) // Berkedip 6 kali
+    {
+        spriteRenderer.enabled = !spriteRenderer.enabled; // Toggle visibilitas
+        yield return new WaitForSeconds(0.2f); // Tunggu 0.2 detik
+    }
+    spriteRenderer.enabled = true; // Pastikan sprite terlihat
+
+    // Respawn ke checkpoint
+    RespawnManager.instance.Respawn(gameObject);
+
+    // Aktifkan kembali gerakan
+    rb.bodyType = RigidbodyType2D.Dynamic;
+
+    isDead = false;
+}
 
     private void OnDrawGizmosSelected()
     {

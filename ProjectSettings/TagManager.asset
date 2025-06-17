@@ -10,6 +10,11 @@ TagManager:
   - Duri
   - Coin
   - Gas
+  - Ladder
+  - Player1
+  - Player2
+  - Laser
+  - Lava
   layers:
   - Default
   - TransparentFX
@@ -20,7 +25,7 @@ TagManager:
   - Player1
   - Player2
   - Platform
-  - 
+  - BlokTembus
   - 
   - 
   - 

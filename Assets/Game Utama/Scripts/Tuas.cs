@@ -9,6 +9,8 @@ public class Tuas : MonoBehaviour
     private bool isPlayerNear = false;
     private Vector3 originalScale;
 
+    private int playerNumberNear = 0; // Menyimpan nomor pemain yang berada di dekat tuas
+
     void Start()
     {
         originalScale = transform.localScale;
@@ -18,7 +20,12 @@ public class Tuas : MonoBehaviour
     {
         if (isPlayerNear)
         {
-            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.RightShift))
+            // Cek interaksi berdasarkan playerNumber
+            if (playerNumberNear == 1 && Input.GetKeyDown(KeyCode.E)) // Player 1
+            {
+                ToggleLever();
+            }
+            else if (playerNumberNear == 2 && Input.GetKeyDown(KeyCode.RightShift)) // Player 2
             {
                 ToggleLever();
             }
@@ -27,17 +34,25 @@ public class Tuas : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player1") || other.CompareTag("Player2"))
         {
             isPlayerNear = true;
+
+            // Ambil nomor pemain dari PlayerController
+            PlayerController playerController = other.GetComponent<PlayerController>();
+            if (playerController != null)
+            {
+                playerNumberNear = playerController.playerNumber;
+            }
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player1") || other.CompareTag("Player2"))
         {
             isPlayerNear = false;
+            playerNumberNear = 0; // Reset nomor pemain saat keluar
         }
     }
 
